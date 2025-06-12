@@ -1,7 +1,7 @@
 import strawberry
-from typing import List
 from db import db
 import pandas as pd
+from typing import List, Optional
 
 # ---------------------
 # Tipos para GraphQL
@@ -37,7 +37,11 @@ class Query:
 
     # Eficiencia Producción
     @strawberry.field
-    def eficiencia_produccion(self, anio: int, mes: int) -> List[EficienciaProduccion]:
+    def eficiencia_produccion(
+        self,
+        anio: Optional[int] = None,
+        mes: Optional[int] = None
+    ) -> List[EficienciaProduccion]:
         data = list(db.produccion.find())
         df = pd.DataFrame(data)
 
@@ -45,7 +49,11 @@ class Query:
             return []
 
         df['fecha_produccion'] = pd.to_datetime(df['fecha_produccion'])
-        df = df[(df['fecha_produccion'].dt.year == anio) & (df['fecha_produccion'].dt.month == mes)]
+
+        if anio is not None:
+            df = df[df['fecha_produccion'].dt.year == anio]
+        if mes is not None:
+            df = df[df['fecha_produccion'].dt.month == mes]
 
         df['eficiencia'] = (df['cantidad_producida'] / df['cantidad_planificada']) * 100
 
@@ -60,7 +68,11 @@ class Query:
 
     # Margen Bruto
     @strawberry.field
-    def margen_bruto(self, anio: int, mes: int) -> List[MargenBruto]:
+    def margen_bruto(
+        self,
+        anio: Optional[int] = None,
+        mes: Optional[int] = None
+    ) -> List[MargenBruto]:
         data = list(db.finanzas.find())
         df = pd.DataFrame(data)
 
@@ -68,7 +80,11 @@ class Query:
             return []
 
         df['fecha_venta'] = pd.to_datetime(df['fecha_venta'])
-        df = df[(df['fecha_venta'].dt.year == anio) & (df['fecha_venta'].dt.month == mes)]
+
+        if anio is not None:
+            df = df[df['fecha_venta'].dt.year == anio]
+        if mes is not None:
+            df = df[df['fecha_venta'].dt.month == mes]
 
         df['margen'] = ((df['precio_venta_unitario'] - df['costo_unitario']) / df['precio_venta_unitario']) * 100
 
@@ -82,7 +98,11 @@ class Query:
 
     # Ventas por Categoría
     @strawberry.field
-    def ventas_por_categoria(self, anio: int, mes: int) -> List[VentasPorCategoria]:
+    def ventas_por_categoria(
+        self,
+        anio: Optional[int] = None,
+        mes: Optional[int] = None
+    ) -> List[VentasPorCategoria]:
         data = list(db.ventas.find())
         df = pd.DataFrame(data)
 
@@ -90,7 +110,11 @@ class Query:
             return []
 
         df['fecha_venta'] = pd.to_datetime(df['fecha_venta'])
-        df = df[(df['fecha_venta'].dt.year == anio) & (df['fecha_venta'].dt.month == mes)]
+
+        if anio is not None:
+            df = df[df['fecha_venta'].dt.year == anio]
+        if mes is not None:
+            df = df[df['fecha_venta'].dt.month == mes]
 
         df['venta_total'] = df['cantidad_vendida'] * df['precio_venta_unitario']
         group = df.groupby('categoria_producto')['venta_total'].sum().reset_index()
@@ -118,12 +142,10 @@ class Query:
 
         group = df[['anio', 'mes']].drop_duplicates().sort_values(['anio', 'mes'])
 
-        return (
-            [
-                AnioMes(anio=row['anio'], mes=row['mes'])
-                for _, row in group.iterrows()
-            ]
-        )
+        return [
+            AnioMes(anio=row['anio'], mes=row['mes'])
+            for _, row in group.iterrows()
+        ]
 
     # Años y meses disponibles para Eficiencia Producción
     @strawberry.field
@@ -140,12 +162,10 @@ class Query:
 
         group = df[['anio', 'mes']].drop_duplicates().sort_values(['anio', 'mes'])
 
-        return (
-            [
-                AnioMes(anio=row['anio'], mes=row['mes'])
-                for _, row in group.iterrows()
-            ]
-        )
+        return [
+            AnioMes(anio=row['anio'], mes=row['mes'])
+            for _, row in group.iterrows()
+        ]
 
     # Años y meses disponibles para Margen Bruto
     @strawberry.field
@@ -162,12 +182,10 @@ class Query:
 
         group = df[['anio', 'mes']].drop_duplicates().sort_values(['anio', 'mes'])
 
-        return (
-            [
-                AnioMes(anio=row['anio'], mes=row['mes'])
-                for _, row in group.iterrows()
-            ]
-        )
+        return [
+            AnioMes(anio=row['anio'], mes=row['mes'])
+            for _, row in group.iterrows()
+        ]
 
 # ---------------------
 # Schema
