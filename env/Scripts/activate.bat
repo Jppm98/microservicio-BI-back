@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\USUARIO\Desktop\microservicio-bi\env
+set VIRTUAL_ENV=D:\Documentos\Universidad\9.sw2\2doParcial\microservicio-BI-back\env
 
 if not defined PROMPT set PROMPT=$P$G
 
